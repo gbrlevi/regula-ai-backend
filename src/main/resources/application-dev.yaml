@@ -19,3 +19,18 @@ spring:
     open-in-view: true
   config:
     import: optional:file:.env[.properties]
+  flyway:
+    # Explicitamente desligado: em dev quem gerencia o schema e o ddl-auto: update.
+    # Com os dois ativos, Flyway e Hibernate competem pelo mesmo schema.
+    enabled: false
+
+app:
+  cors:
+    origens-permitidas: http://localhost:5173,http://localhost:3000
+  jwt:
+    # Valor de conveniencia para rodar local. Producao nao tem default: falha o boot.
+    segredo: ${JWT_SECRET:dev-somente-local-nao-use-em-producao-gere-com-openssl-rand-base64-48}
+  auth:
+    bootstrap:
+      usuario: ${AUTH_BOOTSTRAP_USUARIO:regula}
+      senha: ${AUTH_BOOTSTRAP_SENHA:desenvolvimento-local}

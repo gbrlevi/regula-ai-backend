@@ -4,11 +4,14 @@ import br.com.petsaude.regula_ai_backend.DTO.ErroResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice(basePackages = "br.com.petsaude.regula_ai_backend.Controller")
@@ -31,6 +34,29 @@ public class GlobalExceptionHandler {
         String msg = "Parâmetro inválido '" + ex.getName() + "': " + ex.getValue();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErroResponseDTO(400, msg, LocalDateTime.now().toString()));
+    }
+
+    /**
+     * Sem este handler, uma violação de {@code @Valid} cairia no catch-all de
+     * {@code Exception} e viraria 500. Passou a importar quando a API ganhou o
+     * primeiro endpoint com corpo de requisição ({@code POST /api/auth/login}).
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErroResponseDTO> handleValidacao(MethodArgumentNotValidException ex) {
+        String msg = ex.getBindingResult().getFieldErrors().stream()
+                .map(erro -> erro.getField() + ": " + erro.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErroResponseDTO(400, msg.isBlank() ? "Requisição inválida" : msg,
+                        LocalDateTime.now().toString()));
+    }
+
+    /** Corpo ausente ou JSON malformado: 400, e não 500. */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErroResponseDTO> handleCorpoIlegivel(HttpMessageNotReadableException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErroResponseDTO(400, "Corpo da requisição ausente ou malformado",
+                        LocalDateTime.now().toString()));
     }
 
     @ExceptionHandler(Exception.class)

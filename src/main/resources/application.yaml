@@ -3,6 +3,27 @@ spring:
     name: regula-ai-backend
   profiles:
     active: dev
+  data:
+    web:
+      pageable:
+        # O teto padrao do Spring e 2000 itens por pagina: com ele, o dump da base
+        # inteira custa poucas centenas de requisicoes. 100 mantem a API util e
+        # torna a exfiltracao em massa lenta e visivel no log.
+        max-page-size: 100
 
 springdoc:
   default-flat-param-object: true
+
+app:
+  jwt:
+    emissor: regula-ai-backend
+    # 8h cobre um turno de trabalho. Nao ha refresh token (ver ADR no README de
+    # seguranca): a expiracao precisa durar a sessao inteira.
+    expiracao-minutos: 480
+  rate-limit:
+    login:
+      tentativas: 5
+      janela-minutos: 15
+    api:
+      requisicoes: 120
+      janela-minutos: 1

@@ -19,3 +19,26 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+
+server:
+  # Obrigatorio atras do proxy do Render: sem isto getRemoteAddr() devolve o IP do
+  # proxy para todos os clientes, e o rate limit de um visitante bane a equipe inteira.
+  forward-headers-strategy: framework
+
+springdoc:
+  # /v3/api-docs e /swagger-ui entregam o mapa completo da API. Fechados em producao.
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+app:
+  cors:
+    origens-permitidas: ${APP_CORS_ORIGENS_PERMITIDAS:https://regula-ai-front.vercel.app}
+  jwt:
+    # Sem default de proposito: a aplicacao nao deve subir em producao sem segredo.
+    segredo: ${JWT_SECRET}
+  auth:
+    bootstrap:
+      usuario: ${AUTH_BOOTSTRAP_USUARIO:}
+      senha: ${AUTH_BOOTSTRAP_SENHA:}
