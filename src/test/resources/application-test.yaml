@@ -1,0 +1,25 @@
+# Banco em memoria: os testes nunca devem alcancar o Postgres real. Note que este
+# profile nao faz `spring.config.import` do .env (so dev e prod fazem), entao nao
+# ha como as credenciais de producao vazarem para a suite.
+spring:
+  datasource:
+    url: 'jdbc:h2:mem:regula_test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1'
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ''
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+  flyway:
+    enabled: false
+
+app:
+  cors:
+    origens-permitidas: http://localhost:5173
+  jwt:
+    segredo: segredo-de-teste-com-mais-de-32-bytes-para-hs256
+  auth:
+    bootstrap:
+      usuario: conta-de-teste
+      senha: senha-de-teste-longa
