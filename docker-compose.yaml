@@ -6,3 +6,21 @@ services:
       - "8080:8080"
     env_file:
       - .env.dev
+
+  db:
+    image: postgres:18-alpine
+    container_name: regula_ai-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    profiles:
+      - "dev"
+
+volumes:
+  postgres_data:
