@@ -30,6 +30,21 @@ A aplicação sobe na porta **8080**. Em dev, o Swagger UI fica em `http://local
 | `./gradlew build` | Gera o JAR em `build/libs/` |
 | `docker compose up --build` | Roda em container (usa `.env.dev`, porta 8080) |
 
+## Popular o banco com um CSV
+
+O `ImportacaoRunner` importa encaminhamentos em blocos de 500 linhas. Para executá-lo no IntelliJ IDEA:
+
+1. Abra o projeto como um projeto Gradle e configure o JDK 21.
+2. Inicie o PostgreSQL e configure as credenciais em `.env`, na raiz do repositório.
+3. Acesse **Run → Edit Configurations… → + → Application** e configure:
+   - **Main class:** `br.com.petsaude.regula_ai_backend.ImportacaoRunner`
+   - **Use classpath of module:** selecione o módulo principal do projeto
+   - **Program arguments:** caminho do arquivo CSV, por exemplo `dados/encaminhamentos.csv`
+   - **Working directory:** raiz do repositório
+4. Execute a configuração.
+
+O diretório de trabalho na raiz permite carregar as configurações do perfil `dev` e o arquivo `.env`. O CSV deve estar em UTF-8 e ter um cabeçalho que contenha `Cód Usuário` e `Cod Consulta`; o delimitador é detectado automaticamente. O importador registra no log quantas linhas foram criadas, atualizadas ou tiveram erro.
+
 ## Variáveis de ambiente
 
 | Variável | Descrição |
