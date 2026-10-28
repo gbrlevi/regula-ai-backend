@@ -11,6 +11,7 @@ import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.ServiceRequest;
 import org.springframework.stereotype.Service;
 
+import java.text.Normalizer;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.Locale;
@@ -65,7 +66,11 @@ public class FhirConversorService {
         sr.addIdentifier().setSystem(SYS_COD_CONSULTA).setValue(e.getCodConsulta());
         sr.setStatus(mapStatus(e.getSituacao()));
         sr.setIntent(ServiceRequest.ServiceRequestIntent.ORDER);
-        sr.setPriority(mapPrioridade(e.getPrioridade()));
+
+        ServiceRequest.ServiceRequestPriority prioridade = mapPrioridade(e.getPrioridade());
+        if (prioridade != null) {
+            sr.setPriority(prioridade);
+        }
 
         if (e.getPaciente() != null && e.getPaciente().getId() != null) {
             sr.setSubject(new Reference("Patient/" + e.getPaciente().getId()));
@@ -90,7 +95,6 @@ public class FhirConversorService {
         return sr;
     }
 
-    // TODO: Mapear com os valores reais de "sexo" do banco
     private AdministrativeGender mapSexo(String sexo) {
         if (sexo == null) return AdministrativeGender.UNKNOWN;
         return switch (sexo.trim().toUpperCase(Locale.ROOT)) {
@@ -100,13 +104,25 @@ public class FhirConversorService {
         };
     }
 
-    // TODO: tudo provisório, depende dos valores reais de "situacao"
     private ServiceRequest.ServiceRequestStatus mapStatus(String situacao) {
-        return ServiceRequest.ServiceRequestStatus.ACTIVE;
+        return switch (normalizar(situacao)) {
+            case "aguardando agendamento" -> ServiceRequest.ServiceRequestStatus.ACTIVE;
+            default -> ServiceRequest.ServiceRequestStatus.UNKNOWN;
+        };
     }
 
-    // TODO: tudo provisório, depende dos valores reais de "prioridade"
     private ServiceRequest.ServiceRequestPriority mapPrioridade(String prioridade) {
-        return ServiceRequest.ServiceRequestPriority.ROUTINE;
+        return switch (normalizar(prioridade)) {
+            case "baixa prioridade", "media prioridade" -> ServiceRequest.ServiceRequestPriority.ROUTINE;
+            case "alta prioridade" -> ServiceRequest.ServiceRequestPriority.URGENT;
+            case "prioridade muito alta" -> ServiceRequest.ServiceRequestPriority.ASAP;
+            default -> null;
+        };
+    }
+
+    private static String normalizar(String texto) {
+        if (texto == null) return "";
+        String semAcento = Normalizer.normalize(texto, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+        return semAcento.trim().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
     }
 }
